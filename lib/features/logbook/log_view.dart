@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'log_controller.dart';
+import 'package:logbook_app_077/features/logbook/log_controller.dart';
 import 'package:logbook_app_077/features/logbook/models/log_model.dart';
-import 'package:logbook_app_077/features/widgets/log_item_widget.dart'; // Import widget kustom Anda
+import 'package:logbook_app_077/features/widgets/log_item_widget.dart'; 
 
 class LogView extends StatefulWidget {
   final String username;
@@ -39,7 +39,7 @@ class _LogViewState extends State<LogView> {
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context), // Tutup tanpa simpan
+            onPressed: () => Navigator.pop(context), 
             child: const Text("Batal"),
           ),
           ElevatedButton(
@@ -50,10 +50,8 @@ class _LogViewState extends State<LogView> {
                 _contentController.text,
               );
 
-              // Trigger UI Refresh agar data terbaru muncul
               setState(() {});
 
-              // Bersihkan input dan tutup dialog
               _titleController.clear();
               _contentController.clear();
               Navigator.pop(context);
@@ -65,7 +63,6 @@ class _LogViewState extends State<LogView> {
     );
   }
 
-  // Langkah 4: Dialog untuk mengedit catatan yang sudah ada [cite: 112]
   void _showEditLogDialog(int index, LogModel log) {
     _titleController.text = log.title;
     _contentController.text = log.description;
@@ -87,14 +84,12 @@ class _LogViewState extends State<LogView> {
           ),
           ElevatedButton(
             onPressed: () {
-              // Jalankan fungsi update di Controller [cite: 112]
               _controller.updateLog(
                 index,
                 _titleController.text,
                 _contentController.text,
               );
 
-              // Refresh UI
               setState(() {});
 
               _titleController.clear();
@@ -108,7 +103,6 @@ class _LogViewState extends State<LogView> {
     );
   }
 
-  // Fungsi untuk menampilkan dialog konfirmasi logout
   void _showLogoutDialog() {
     showDialog(
       context: context,
@@ -117,14 +111,12 @@ class _LogViewState extends State<LogView> {
         content: const Text("Apakah Anda yakin ingin keluar dari aplikasi?"),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context), // Menutup dialog
+            onPressed: () => Navigator.pop(context), 
             child: const Text("Batal"),
           ),
           ElevatedButton(
             onPressed: () {
-              // Menutup dialog
               Navigator.pop(context); 
-              // Kembali ke halaman Login (pastikan route '/' atau nama route login Anda sesuai)
               Navigator.of(context).pushReplacementNamed('/'); 
             },
             style: ElevatedButton.styleFrom(
@@ -142,7 +134,6 @@ class _LogViewState extends State<LogView> {
 
   @override
   void dispose() {
-    // Membersihkan controller untuk menghindari memory leak [cite: 139]
     _titleController.dispose();
     _contentController.dispose();
     super.dispose();
@@ -165,7 +156,7 @@ class _LogViewState extends State<LogView> {
           IconButton(
             icon: const Icon(Icons.logout),
             onPressed:
-                _showLogoutDialog, // Fungsi dialog konfirmasi yang sudah dibuat
+                _showLogoutDialog, 
           ),
         ],
       ),
@@ -196,7 +187,6 @@ class _LogViewState extends State<LogView> {
           );
         },
       ),
-      // Menyesuaikan warna tombol tambah agar senada dengan AppBar
       floatingActionButton: FloatingActionButton(
         onPressed: _showAddLogDialog,
         backgroundColor: const Color.fromARGB(255, 158, 101, 140),
