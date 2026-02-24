@@ -75,14 +75,12 @@ class _LogViewState extends State<LogView> {
               final title = _titleController.text.trim();
               final desc = _contentController.text.trim();
 
-              // Validasi 1: Judul tidak boleh kosong
               if (title.isEmpty) {
                 _showSnackBar("Judul tidak boleh kosong!", isError: true);
                 return;
               }
 
               if (isEdit) {
-                // Validasi 2: Cek apakah ada perubahan data
                 if (title == log.title && desc == log.description) {
                   _showSnackBar("Tidak ada perubahan yang disimpan.");
                   _closeDialog();
