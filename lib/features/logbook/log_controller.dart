@@ -8,16 +8,28 @@ class LogController {
   static const String _storageKey = 'user_logs_data';
 
   LogController() { loadFromDisk(); }
-
+  
   void addLog(String title, String desc) {
-    final newLog = LogModel(title: title, description: desc, date: DateTime.now().toString());
+    final String formattedTime = DateTime.now().toString().substring(0, 16);
+    
+    final newLog = LogModel(
+      title: title, 
+      description: desc, 
+      timestamp: formattedTime, 
+    );
     logsNotifier.value = [...logsNotifier.value, newLog];
     saveToDisk();
   }
 
   void updateLog(int index, String title, String desc) {
     final currentLogs = List<LogModel>.from(logsNotifier.value);
-    currentLogs[index] = LogModel(title: title, description: desc, date: DateTime.now().toString());
+    final String formattedTime = DateTime.now().toString().substring(0, 16);
+
+    currentLogs[index] = LogModel(
+      title: title, 
+      description: desc, 
+      timestamp: formattedTime,
+    );
     logsNotifier.value = currentLogs;
     saveToDisk();
   }

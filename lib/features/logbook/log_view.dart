@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:logbook_app_077/features/logbook/log_controller.dart';
 import 'package:logbook_app_077/features/logbook/models/log_model.dart';
-import 'package:logbook_app_077/features/widgets/log_item_widget.dart'; 
+import 'package:logbook_app_077/features/widgets/log_item_widget.dart';
 
 class LogView extends StatefulWidget {
   final String username;
@@ -13,19 +13,26 @@ class LogView extends StatefulWidget {
 }
 
 class _LogViewState extends State<LogView> {
-
   final LogController _controller = LogController();
-
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _contentController = TextEditingController();
+
+  final Color _primaryPink = const Color.fromARGB(255, 158, 101, 140);
+
+  @override
+  void dispose() {
+    _titleController.dispose();
+    _contentController.dispose();
+    super.dispose();
+  }
 
   void _showAddLogDialog() {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text("Tambah Catatan Baru"),
+        title: const Text("Tambah Catatan"),
         content: Column(
-          mainAxisSize: MainAxisSize.min, // Agar dialog tidak memenuhi layar
+          mainAxisSize: MainAxisSize.min,
           children: [
             TextField(
               controller: _titleController,
@@ -39,23 +46,31 @@ class _LogViewState extends State<LogView> {
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context), 
-            child: const Text("Batal"),
-          ),
-          ElevatedButton(
             onPressed: () {
-              
-              _controller.addLog(
-                _titleController.text,
-                _contentController.text,
-              );
-
-              setState(() {});
-
               _titleController.clear();
               _contentController.clear();
               Navigator.pop(context);
             },
+            child: Text(
+              "Batal",
+              style: TextStyle(color: _primaryPink),
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              _controller.addLog(
+                _titleController.text,
+                _contentController.text,
+              );
+              setState(() {});
+              _titleController.clear();
+              _contentController.clear();
+              Navigator.pop(context);
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: _primaryPink,
+              foregroundColor: Colors.white,
+            ),
             child: const Text("Simpan"),
           ),
         ],
@@ -79,8 +94,15 @@ class _LogViewState extends State<LogView> {
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text("Batal"),
+            onPressed: () {
+              _titleController.clear();
+              _contentController.clear();
+              Navigator.pop(context);
+            },
+            child: Text(
+              "Batal",
+              style: TextStyle(color: _primaryPink),
+            ),
           ),
           ElevatedButton(
             onPressed: () {
@@ -89,13 +111,15 @@ class _LogViewState extends State<LogView> {
                 _titleController.text,
                 _contentController.text,
               );
-
               setState(() {});
-
               _titleController.clear();
               _contentController.clear();
               Navigator.pop(context);
             },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: _primaryPink,
+              foregroundColor: Colors.white,
+            ),
             child: const Text("Update"),
           ),
         ],
@@ -111,32 +135,26 @@ class _LogViewState extends State<LogView> {
         content: const Text("Apakah Anda yakin ingin keluar dari aplikasi?"),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context), 
-            child: const Text("Batal"),
+            onPressed: () => Navigator.pop(context),
+            child: Text(
+              "Batal",
+              style: TextStyle(color: _primaryPink),
+            ),
           ),
           ElevatedButton(
             onPressed: () {
-              Navigator.pop(context); 
-              Navigator.of(context).pushReplacementNamed('/'); 
+              Navigator.pop(context);
+              Navigator.of(context).pushReplacementNamed('/');
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color.fromARGB(255, 158, 101, 140),
+              backgroundColor: _primaryPink,
+              foregroundColor: Colors.white,
             ),
-            child: const Text(
-              "Keluar",
-              style: TextStyle(color: Colors.white),
-            ),
+            child: const Text("Keluar"),
           ),
         ],
       ),
     );
-  }
-
-  @override
-  void dispose() {
-    _titleController.dispose();
-    _contentController.dispose();
-    super.dispose();
   }
 
   @override
@@ -150,13 +168,12 @@ class _LogViewState extends State<LogView> {
             fontWeight: FontWeight.bold,
           ),
         ),
-        backgroundColor: const Color.fromARGB(255, 158, 101, 140),
+        backgroundColor: _primaryPink,
         iconTheme: const IconThemeData(color: Colors.white),
         actions: [
           IconButton(
             icon: const Icon(Icons.logout),
-            onPressed:
-                _showLogoutDialog, 
+            onPressed: _showLogoutDialog,
           ),
         ],
       ),
@@ -180,7 +197,8 @@ class _LogViewState extends State<LogView> {
                 log: log,
                 onEdit: () => _showEditLogDialog(index, log),
                 onDelete: () {
-                  setState(() => _controller.removeLog(index));
+                  _controller.removeLog(index);
+                  setState(() {});
                 },
               );
             },
@@ -189,7 +207,7 @@ class _LogViewState extends State<LogView> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: _showAddLogDialog,
-        backgroundColor: const Color.fromARGB(255, 158, 101, 140),
+        backgroundColor: _primaryPink,
         foregroundColor: Colors.white,
         child: const Icon(Icons.add),
       ),
