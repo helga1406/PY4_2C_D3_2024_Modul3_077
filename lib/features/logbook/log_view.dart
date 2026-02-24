@@ -149,6 +149,7 @@ class _LogViewState extends State<LogView> {
         ),
         backgroundColor: _primaryPink,
         iconTheme: const IconThemeData(color: Colors.white),
+        automaticallyImplyLeading: false, 
         actions: [
           IconButton(
             icon: const Icon(Icons.logout),
