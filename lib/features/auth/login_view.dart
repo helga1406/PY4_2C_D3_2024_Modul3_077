@@ -80,6 +80,7 @@ class _LoginViewState extends State<LoginView> {
         backgroundColor: Colors.white,
         elevation: 0,
         centerTitle: true,
+        automaticallyImplyLeading: false, 
       ),
       body: SingleChildScrollView(
         child: Padding(
