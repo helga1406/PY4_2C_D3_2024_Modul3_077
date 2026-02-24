@@ -5,7 +5,6 @@ import 'package:logbook_app_077/features/widgets/log_item_widget.dart';
 
 class LogView extends StatefulWidget {
   final String username;
-
   const LogView({super.key, required this.username});
 
   @override
@@ -16,7 +15,6 @@ class _LogViewState extends State<LogView> {
   final LogController _controller = LogController();
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _contentController = TextEditingController();
-
   final Color _primaryPink = const Color.fromARGB(255, 158, 101, 140);
 
   @override
@@ -26,11 +24,27 @@ class _LogViewState extends State<LogView> {
     super.dispose();
   }
 
-  void _showAddLogDialog() {
+  void _showSnackBar(String message, {bool isError = false}) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: isError ? Colors.redAccent : _primaryPink,
+        duration: const Duration(seconds: 2),
+      ),
+    );
+  }
+
+  void _openLogDialog({int? index, LogModel? log}) {
+    final isEdit = index != null && log != null;
+    if (isEdit) {
+      _titleController.text = log.title;
+      _contentController.text = log.description;
+    }
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text("Tambah Catatan"),
+        title: Text(isEdit ? "Edit Catatan" : "Tambah Catatan"),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -46,111 +60,73 @@ class _LogViewState extends State<LogView> {
         ),
         actions: [
           TextButton(
-            onPressed: () {
-              _titleController.clear();
-              _contentController.clear();
-              Navigator.pop(context);
-            },
-            child: Text(
-              "Batal",
-              style: TextStyle(color: _primaryPink),
-            ),
+            onPressed: () => _closeDialog(),
+            child: Text("Batal", style: TextStyle(color: _primaryPink)),
           ),
           ElevatedButton(
             onPressed: () {
-              _controller.addLog(
-                _titleController.text,
-                _contentController.text,
-              );
-              setState(() {});
-              _titleController.clear();
-              _contentController.clear();
-              Navigator.pop(context);
+              final title = _titleController.text.trim();
+              final desc = _contentController.text.trim();
+
+              if (title.isEmpty) {
+                _showSnackBar("catatan tidak boleh kosong!", isError: true);
+                return;
+              }
+
+              if (isEdit) {
+
+                if (title == log.title && desc == log.description) {
+                  _showSnackBar("Tidak ada perubahan yang disimpan.");
+                  _closeDialog();
+                  return;
+                }
+                _controller.updateLog(index, title, desc);
+              } else {
+                _controller.addLog(title, desc);
+              }
+
+              _closeDialog();
+              _showSnackBar(isEdit ? "Berhasil diperbarui!" : "Berhasil disimpan!");
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: _primaryPink,
               foregroundColor: Colors.white,
             ),
-            child: const Text("Simpan"),
+            child: Text(isEdit ? "Update" : "Simpan"),
           ),
         ],
       ),
     );
   }
 
-  void _showEditLogDialog(int index, LogModel log) {
-    _titleController.text = log.title;
-    _contentController.text = log.description;
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text("Edit Catatan"),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(controller: _titleController),
-            TextField(controller: _contentController),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              _titleController.clear();
-              _contentController.clear();
-              Navigator.pop(context);
-            },
-            child: Text(
-              "Batal",
-              style: TextStyle(color: _primaryPink),
-            ),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              _controller.updateLog(
-                index,
-                _titleController.text,
-                _contentController.text,
-              );
-              setState(() {});
-              _titleController.clear();
-              _contentController.clear();
-              Navigator.pop(context);
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: _primaryPink,
-              foregroundColor: Colors.white,
-            ),
-            child: const Text("Update"),
-          ),
-        ],
-      ),
-    );
+  void _closeDialog() {
+    _titleController.clear();
+    _contentController.clear();
+    Navigator.pop(context);
   }
 
-  void _showLogoutDialog() {
+  void _confirmAction({
+    required String title,
+    required String content,
+    required VoidCallback onConfirm,
+  }) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text("Konfirmasi Logout"),
-        content: const Text("Apakah Anda yakin ingin keluar dari aplikasi?"),
+        title: Text(title),
+        content: Text(content),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text(
-              "Batal",
-              style: TextStyle(color: _primaryPink),
-            ),
+            child: Text("Batal", style: TextStyle(color: _primaryPink)),
           ),
           ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              Navigator.of(context).pushReplacementNamed('/');
-            },
+            onPressed: onConfirm,
             style: ElevatedButton.styleFrom(
               backgroundColor: _primaryPink,
               foregroundColor: Colors.white,
             ),
-            child: const Text("Keluar"),
+            child: const Text("Ya"),
           ),
         ],
       ),
@@ -163,23 +139,24 @@ class _LogViewState extends State<LogView> {
       appBar: AppBar(
         title: Text(
           "Logbook: ${widget.username}",
-          style: const TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-          ),
+          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
         backgroundColor: _primaryPink,
         iconTheme: const IconThemeData(color: Colors.white),
         actions: [
           IconButton(
             icon: const Icon(Icons.logout),
-            onPressed: _showLogoutDialog,
+            onPressed: () => _confirmAction(
+              title: "Konfirmasi Logout",
+              content: "Apakah Anda yakin ingin keluar?",
+              onConfirm: () => Navigator.of(context).pushReplacementNamed('/'),
+            ),
           ),
         ],
       ),
       body: ValueListenableBuilder<List<LogModel>>(
         valueListenable: _controller.logsNotifier,
-        builder: (context, currentLogs, child) {
+        builder: (context, currentLogs, _) {
           if (currentLogs.isEmpty) {
             return const Center(
               child: Text(
@@ -195,18 +172,23 @@ class _LogViewState extends State<LogView> {
               final log = currentLogs[index];
               return LogItemWidget(
                 log: log,
-                onEdit: () => _showEditLogDialog(index, log),
-                onDelete: () {
-                  _controller.removeLog(index);
-                  setState(() {});
-                },
+                onEdit: () => _openLogDialog(index: index, log: log),
+                onDelete: () => _confirmAction(
+                  title: "Konfirmasi Hapus",
+                  content: "Hapus catatan ini?",
+                  onConfirm: () {
+                    _controller.removeLog(index);
+                    Navigator.pop(context);
+                    _showSnackBar("Catatan telah dihapus.");
+                  },
+                ),
               );
             },
           );
         },
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: _showAddLogDialog,
+        onPressed: () => _openLogDialog(),
         backgroundColor: _primaryPink,
         foregroundColor: Colors.white,
         child: const Icon(Icons.add),

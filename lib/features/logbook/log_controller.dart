@@ -9,15 +9,16 @@ class LogController {
 
   LogController() { loadFromDisk(); }
   
+
   void addLog(String title, String desc) {
     final String formattedTime = DateTime.now().toString().substring(0, 16);
-    
     final newLog = LogModel(
       title: title, 
       description: desc, 
       timestamp: formattedTime, 
     );
-    logsNotifier.value = [...logsNotifier.value, newLog];
+    
+    logsNotifier.value = [...logsNotifier.value, newLog]; 
     saveToDisk();
   }
 
@@ -30,14 +31,16 @@ class LogController {
       description: desc, 
       timestamp: formattedTime,
     );
-    logsNotifier.value = currentLogs;
+    
+    logsNotifier.value = currentLogs; 
     saveToDisk();
   }
 
   void removeLog(int index) {
     final currentLogs = List<LogModel>.from(logsNotifier.value);
     currentLogs.removeAt(index);
-    logsNotifier.value = currentLogs;
+    
+    logsNotifier.value = currentLogs; 
     saveToDisk();
   }
 
