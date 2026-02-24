@@ -5,10 +5,14 @@ import 'package:logbook_app_077/features/logbook/models/log_model.dart';
 
 class LogController {
   final ValueNotifier<List<LogModel>> logsNotifier = ValueNotifier([]);
-  static const String _storageKey = 'user_logs_data';
-
-  LogController() { loadFromDisk(); }
   
+  final String username;
+  late final String _userStorageKey;
+
+  LogController({required this.username}) {
+    _userStorageKey = 'user_logs_data_$username';
+    loadFromDisk();
+  }
 
   void addLog(String title, String desc) {
     final String formattedTime = DateTime.now().toString().substring(0, 16);
@@ -47,15 +51,17 @@ class LogController {
   Future<void> saveToDisk() async {
     final prefs = await SharedPreferences.getInstance();
     final String encodedData = jsonEncode(logsNotifier.value.map((e) => e.toMap()).toList());
-    await prefs.setString(_storageKey, encodedData);
+    await prefs.setString(_userStorageKey, encodedData);
   }
 
   Future<void> loadFromDisk() async {
     final prefs = await SharedPreferences.getInstance();
-    final String? data = prefs.getString(_storageKey);
+    final String? data = prefs.getString(_userStorageKey);
     if (data != null) {
       final List decoded = jsonDecode(data);
       logsNotifier.value = decoded.map((e) => LogModel.fromMap(e)).toList();
+    } else {
+      logsNotifier.value = [];
     }
   }
 }

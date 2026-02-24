@@ -12,11 +12,18 @@ class LogView extends StatefulWidget {
 }
 
 class _LogViewState extends State<LogView> {
-  final LogController _controller = LogController();
+  late final LogController _controller;
+  
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _contentController = TextEditingController();
   final Color _primaryPink = const Color.fromARGB(255, 158, 101, 140);
 
+  @override
+  void initState() {
+    super.initState();
+    _controller = LogController(username: widget.username);
+  }
+  
   @override
   void dispose() {
     _titleController.dispose();
