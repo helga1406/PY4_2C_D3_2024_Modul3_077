@@ -13,17 +13,22 @@ class LogView extends StatefulWidget {
 
 class _LogViewState extends State<LogView> {
   late final LogController _controller;
-  
+
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _contentController = TextEditingController();
+
   final Color _primaryPink = const Color.fromARGB(255, 158, 101, 140);
+  final Color _inputGrey = const Color.fromARGB(255, 245, 245, 245);
+
+  String _selectedCategory = "Pribadi";
+  final List<String> _categories = ["Pribadi", "Pekerjaan", "Urgent"];
 
   @override
   void initState() {
     super.initState();
     _controller = LogController(username: widget.username);
   }
-  
+
   @override
   void dispose() {
     _titleController.dispose();
@@ -46,61 +51,145 @@ class _LogViewState extends State<LogView> {
     if (isEdit) {
       _titleController.text = log.title;
       _contentController.text = log.description;
+      _selectedCategory = log.category;
+    } else {
+      _titleController.clear();
+      _contentController.clear();
+      _selectedCategory = "Pribadi";
     }
 
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(isEdit ? "Edit Catatan" : "Tambah Catatan"),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: _titleController,
-              decoration: const InputDecoration(hintText: "Judul Catatan"),
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          backgroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          title: Text(
+            isEdit ? "Edit Catatan" : "Tambah Catatan",
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
             ),
-            TextField(
-              controller: _contentController,
-              decoration: const InputDecoration(hintText: "Isi Deskripsi"),
+          ),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  decoration: BoxDecoration(
+                    color: _inputGrey,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: TextField(
+                    controller: _titleController,
+                    decoration: const InputDecoration(
+                      hintText: "Judul",
+                      border: InputBorder.none,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  decoration: BoxDecoration(
+                    color: _inputGrey,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: TextField(
+                    controller: _contentController,
+                    maxLines: 8,
+                    decoration: const InputDecoration(
+                      hintText: "Isi catatan...",
+                      border: InputBorder.none,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 15),
+                DropdownButtonFormField<String>(
+                  initialValue: _selectedCategory,
+                  dropdownColor: Colors.white,
+                  decoration: InputDecoration(
+                    labelText: "Kategori",
+                    filled: true,
+                    fillColor: _inputGrey,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide.none,
+                    ),
+                  ),
+                  items: _categories.map((String category) {
+                    return DropdownMenuItem(
+                      value: category,
+                      child: Text(category),
+                    );
+                  }).toList(),
+                  onChanged: (String? newValue) {
+                    setDialogState(() {
+                      _selectedCategory = newValue!;
+                    });
+                  },
+                ),
+              ],
             ),
+          ),
+          actions: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                TextButton(
+                  onPressed: () => _closeDialog(),
+                  child: Text(
+                    "BATAL",
+                    style: TextStyle(
+                      color: _primaryPink,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    final title = _titleController.text.trim();
+                    final desc = _contentController.text.trim();
+                    if (title.isEmpty) {
+                      _showSnackBar("Judul tidak boleh kosong!", isError: true);
+                      return;
+                    }
+                    if (isEdit) {
+                      _controller.updateLog(
+                        index,
+                        title,
+                        desc,
+                        _selectedCategory,
+                      );
+                    } else {
+                      _controller.addLog(title, desc, _selectedCategory);
+                    }
+                    _closeDialog();
+                    _showSnackBar(
+                      isEdit ? "Berhasil diperbarui!" : "Berhasil disimpan!",
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: _primaryPink,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                  ),
+                  child: Text(
+                    isEdit ? "UPDATE" : "SIMPAN",
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
           ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => _closeDialog(),
-            child: Text("Batal", style: TextStyle(color: _primaryPink)),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              final title = _titleController.text.trim();
-              final desc = _contentController.text.trim();
-
-              if (title.isEmpty) {
-                _showSnackBar("Judul tidak boleh kosong!", isError: true);
-                return;
-              }
-
-              if (isEdit) {
-                if (title == log.title && desc == log.description) {
-                  _showSnackBar("Tidak ada perubahan yang disimpan.");
-                  _closeDialog();
-                  return;
-                }
-                _controller.updateLog(index, title, desc);
-              } else {
-                _controller.addLog(title, desc);
-              }
-
-              _closeDialog();
-              _showSnackBar(isEdit ? "Berhasil diperbarui!" : "Berhasil disimpan!");
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: _primaryPink,
-              foregroundColor: Colors.white,
-            ),
-            child: Text(isEdit ? "Update" : "Simpan"),
-          ),
-        ],
       ),
     );
   }
@@ -119,7 +208,8 @@ class _LogViewState extends State<LogView> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(title),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+        title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
         content: Text(content),
         actions: [
           TextButton(
@@ -131,6 +221,9 @@ class _LogViewState extends State<LogView> {
             style: ElevatedButton.styleFrom(
               backgroundColor: _primaryPink,
               foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(30),
+              ),
             ),
             child: const Text("Ya"),
           ),
@@ -142,14 +235,20 @@ class _LogViewState extends State<LogView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: false, 
+      backgroundColor: Colors.white,
       appBar: AppBar(
         title: Text(
           "Logbook: ${widget.username}",
-          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+          ),
         ),
+        elevation: 0,
         backgroundColor: _primaryPink,
         iconTheme: const IconThemeData(color: Colors.white),
-        automaticallyImplyLeading: false, 
+        automaticallyImplyLeading: false,
         actions: [
           IconButton(
             icon: const Icon(Icons.logout),
@@ -161,38 +260,133 @@ class _LogViewState extends State<LogView> {
           ),
         ],
       ),
-      body: ValueListenableBuilder<List<LogModel>>(
-        valueListenable: _controller.logsNotifier,
-        builder: (context, currentLogs, _) {
-          if (currentLogs.isEmpty) {
-            return const Center(
-              child: Text(
-                "Belum ada catatan logbook.",
-                style: TextStyle(color: Colors.grey, fontSize: 16),
-              ),
-            );
-          }
-          return ListView.builder(
-            padding: const EdgeInsets.only(top: 10),
-            itemCount: currentLogs.length,
-            itemBuilder: (context, index) {
-              final log = currentLogs[index];
-              return LogItemWidget(
-                log: log,
-                onEdit: () => _openLogDialog(index: index, log: log),
-                onDelete: () => _confirmAction(
-                  title: "Konfirmasi Hapus",
-                  content: "Hapus catatan ini?",
-                  onConfirm: () {
-                    _controller.removeLog(index);
-                    Navigator.pop(context);
-                    _showSnackBar("Catatan telah dihapus.");
-                  },
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 20, 16, 12),
+            child: TextField(
+              onChanged: (value) => _controller.searchLog(value),
+              decoration: InputDecoration(
+                hintText: "Cari judul catatan...",
+                prefixIcon: Icon(Icons.search, color: _primaryPink),
+                filled: true,
+                fillColor: Colors.white,
+                contentPadding: const EdgeInsets.symmetric(vertical: 0),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(25),
+                  borderSide: BorderSide(
+                    color: _primaryPink.withValues(alpha: 0.3),
+                  ),
                 ),
-              );
-            },
-          );
-        },
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(25),
+                  borderSide: BorderSide(color: _primaryPink, width: 2),
+                ),
+              ),
+            ),
+          ),
+
+          Expanded(
+            child: ValueListenableBuilder<List<LogModel>>(
+              valueListenable: _controller.filteredLogs,
+              builder: (context, currentLogs, _) {
+                final String currentSearch = _controller.searchQuery.value;
+                if (currentLogs.isEmpty) {
+                  final bool isSearching = currentSearch.isNotEmpty;
+                  return Column(
+                    children: [
+                      const Spacer(flex: 2),
+                      Center(
+                        child: Column(
+                          children: [
+                            Container(
+                              width: 200,
+                              height: 200,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withValues(alpha: 0.1),
+                                    blurRadius: 25,
+                                    offset: const Offset(0, 10),
+                                  ),
+                                ],
+                              ),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(100),
+                                child: Image.asset(
+                                  "assets/images/icon.jpeg",
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) {
+                                    return Icon(
+                                      Icons.note_alt,
+                                      size: 100,
+                                      color: _primaryPink,
+                                    );
+                                  },
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 32),
+                            // TEKS DINAMIS SESUAI KONDISI
+                            Text(
+                              isSearching
+                                  ? "Tidak Ditemukan"
+                                  : "Logbook Masih Kosong",
+                              style: TextStyle(
+                                fontSize: 22,
+                                fontWeight: FontWeight.bold,
+                                color: _primaryPink,
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 40,
+                              ),
+                              child: Text(
+                                isSearching
+                                    ? "Pencarian '$currentSearch' tidak cocok dengan judul manapun."
+                                    : "Ketuk tombol + untuk mulai mencatat hari ini.",
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  color: Colors.grey[600],
+                                  fontSize: 15,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const Spacer(flex: 3),
+                    ],
+                  );
+                }
+
+                return ListView.builder(
+                  padding: const EdgeInsets.only(bottom: 80),
+                  itemCount: currentLogs.length,
+                  itemBuilder: (context, index) {
+                    final log = currentLogs[index];
+                    return LogItemWidget(
+                      log: log,
+                      onEdit: () => _openLogDialog(index: index, log: log),
+                      onDelete: () => _confirmAction(
+                        title: "Konfirmasi Hapus",
+                        content: "Hapus catatan ini?",
+                        onConfirm: () {
+                          _controller.removeLog(index);
+                          Navigator.pop(context);
+                          _showSnackBar("Catatan telah dihapus.");
+                        },
+                      ),
+                    );
+                  },
+                );
+              },
+            ),
+          ),
+        ],
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _openLogDialog(),

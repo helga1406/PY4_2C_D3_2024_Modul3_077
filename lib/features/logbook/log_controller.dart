@@ -5,6 +5,8 @@ import 'package:logbook_app_077/features/logbook/models/log_model.dart';
 
 class LogController {
   final ValueNotifier<List<LogModel>> logsNotifier = ValueNotifier([]);
+  final ValueNotifier<List<LogModel>> filteredLogs = ValueNotifier([]);
+  final ValueNotifier<String> searchQuery = ValueNotifier(""); 
   
   final String username;
   late final String _userStorageKey;
@@ -14,19 +16,33 @@ class LogController {
     loadFromDisk();
   }
 
-  void addLog(String title, String desc) {
+  void searchLog(String query) {
+    searchQuery.value = query; 
+
+    if (query.isEmpty) {
+      filteredLogs.value = logsNotifier.value;
+    } else {
+      filteredLogs.value = logsNotifier.value
+          .where((log) => log.title.toLowerCase().contains(query.toLowerCase()))
+          .toList();
+    }
+  }
+
+  void addLog(String title, String desc, String category) {
     final String formattedTime = DateTime.now().toString().substring(0, 16);
     final newLog = LogModel(
       title: title, 
       description: desc, 
       timestamp: formattedTime, 
+      category: category, 
     );
     
-    logsNotifier.value = [...logsNotifier.value, newLog]; 
+    logsNotifier.value = [...logsNotifier.value, newLog];
+    filteredLogs.value = logsNotifier.value; 
     saveToDisk();
   }
 
-  void updateLog(int index, String title, String desc) {
+  void updateLog(int index, String title, String desc, String category) {
     final currentLogs = List<LogModel>.from(logsNotifier.value);
     final String formattedTime = DateTime.now().toString().substring(0, 16);
 
@@ -34,9 +50,11 @@ class LogController {
       title: title, 
       description: desc, 
       timestamp: formattedTime,
+      category: category, 
     );
     
-    logsNotifier.value = currentLogs; 
+    logsNotifier.value = currentLogs;
+    filteredLogs.value = logsNotifier.value; 
     saveToDisk();
   }
 
@@ -44,7 +62,8 @@ class LogController {
     final currentLogs = List<LogModel>.from(logsNotifier.value);
     currentLogs.removeAt(index);
     
-    logsNotifier.value = currentLogs; 
+    logsNotifier.value = currentLogs;
+    filteredLogs.value = logsNotifier.value; 
     saveToDisk();
   }
 
@@ -60,8 +79,10 @@ class LogController {
     if (data != null) {
       final List decoded = jsonDecode(data);
       logsNotifier.value = decoded.map((e) => LogModel.fromMap(e)).toList();
+      filteredLogs.value = logsNotifier.value;
     } else {
       logsNotifier.value = [];
+      filteredLogs.value = [];
     }
   }
 }
