@@ -36,6 +36,63 @@ class _LogViewState extends State<LogView> {
     super.dispose();
   }
 
+  void _showReadLogDialog(LogModel log) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text(
+          log.title,
+          textAlign: TextAlign.center,
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: _primaryPink.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Text(
+                  log.category,
+                  style: TextStyle(
+                    color: _primaryPink, 
+                    fontWeight: FontWeight.bold, 
+                    fontSize: 12,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 15),
+              Text(
+                log.description,
+                style: const TextStyle(fontSize: 16, color: Colors.black87),
+              ),
+              const Divider(height: 30),
+              Text(
+                "Dibuat pada: ${log.timestamp}",
+                style: const TextStyle(fontSize: 12, color: Colors.grey),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(
+              "TUTUP", 
+              style: TextStyle(color: _primaryPink, fontWeight: FontWeight.bold),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   void _showSnackBar(String message, {bool isError = false}) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -110,7 +167,7 @@ class _LogViewState extends State<LogView> {
                 ),
                 const SizedBox(height: 15),
                 DropdownButtonFormField<String>(
-                  initialValue: _selectedCategory,
+                  initialValue: _selectedCategory, 
                   dropdownColor: Colors.white,
                   decoration: InputDecoration(
                     labelText: "Kategori",
@@ -264,25 +321,66 @@ class _LogViewState extends State<LogView> {
         children: [
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 20, 16, 12),
-            child: TextField(
-              onChanged: (value) => _controller.searchLog(value),
-              decoration: InputDecoration(
-                hintText: "Cari judul catatan...",
-                prefixIcon: Icon(Icons.search, color: _primaryPink),
-                filled: true,
-                fillColor: Colors.white,
-                contentPadding: const EdgeInsets.symmetric(vertical: 0),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(25),
-                  borderSide: BorderSide(
-                    color: _primaryPink.withValues(alpha: 0.3),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    onChanged: (value) => _controller.searchLog(value),
+                    decoration: InputDecoration(
+                      hintText: "Cari judul...",
+                      prefixIcon: Icon(Icons.search, color: _primaryPink),
+                      filled: true,
+                      fillColor: Colors.white,
+                      contentPadding: const EdgeInsets.symmetric(vertical: 0),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(25),
+                        borderSide: BorderSide(
+                          color: _primaryPink.withValues(alpha: 0.3),
+                        ),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(25),
+                        borderSide: BorderSide(color: _primaryPink, width: 2),
+                      ),
+                    ),
                   ),
                 ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(25),
-                  borderSide: BorderSide(color: _primaryPink, width: 2),
+                const SizedBox(width: 10),
+                // --- DROPDOWN FILTER KATEGORI ---
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    border: Border.all(color: _primaryPink.withValues(alpha: 0.3)),
+                    borderRadius: BorderRadius.circular(25),
+                  ),
+                  child: DropdownButtonHideUnderline(
+                    child: ValueListenableBuilder<String>(
+                      valueListenable: _controller.selectedFilter,
+                      builder: (context, currentFilter, _) {
+                        return DropdownButton<String>(
+                          value: currentFilter,
+                          icon: Icon(Icons.filter_list_rounded, color: _primaryPink),
+                          dropdownColor: Colors.white,
+                          style: TextStyle(color: _primaryPink, fontWeight: FontWeight.bold),
+                          items: ["Semua", "Pribadi", "Pekerjaan", "Urgent"]
+                              .map((String category) {
+                            return DropdownMenuItem(
+                              value: category,
+                              child: Text(category),
+                            );
+                          }).toList(),
+                          onChanged: (String? newValue) {
+                            if (newValue != null) {
+                              _controller.setFilterCategory(newValue);
+                            }
+                          },
+                        );
+                      },
+                    ),
+                  ),
                 ),
-              ),
+              ],
             ),
           ),
 
@@ -291,8 +389,12 @@ class _LogViewState extends State<LogView> {
               valueListenable: _controller.filteredLogs,
               builder: (context, currentLogs, _) {
                 final String currentSearch = _controller.searchQuery.value;
+                final String currentFilter = _controller.selectedFilter.value; // Ambil nilai filter saat ini
+
                 if (currentLogs.isEmpty) {
-                  final bool isSearching = currentSearch.isNotEmpty;
+                  // Cek apakah list kosong karena pencarian ATAU karena filter
+                  final bool isSearchingOrFiltering = currentSearch.isNotEmpty || currentFilter != "Semua";
+                  
                   return Column(
                     children: [
                       const Spacer(flex: 2),
@@ -328,9 +430,8 @@ class _LogViewState extends State<LogView> {
                               ),
                             ),
                             const SizedBox(height: 32),
-                            // TEKS DINAMIS SESUAI KONDISI
                             Text(
-                              isSearching
+                              isSearchingOrFiltering
                                   ? "Tidak Ditemukan"
                                   : "Logbook Masih Kosong",
                               style: TextStyle(
@@ -345,8 +446,8 @@ class _LogViewState extends State<LogView> {
                                 horizontal: 40,
                               ),
                               child: Text(
-                                isSearching
-                                    ? "Pencarian '$currentSearch' tidak cocok dengan judul manapun."
+                                isSearchingOrFiltering
+                                    ? "Catatan dengan kriteria tersebut tidak ditemukan."
                                     : "Ketuk tombol + untuk mulai mencatat hari ini.",
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
@@ -370,6 +471,7 @@ class _LogViewState extends State<LogView> {
                     final log = currentLogs[index];
                     return LogItemWidget(
                       log: log,
+                      onTap: () => _showReadLogDialog(log),
                       onEdit: () => _openLogDialog(index: index, log: log),
                       onDelete: () => _confirmAction(
                         title: "Konfirmasi Hapus",

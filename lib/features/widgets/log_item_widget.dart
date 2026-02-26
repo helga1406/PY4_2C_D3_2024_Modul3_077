@@ -5,12 +5,14 @@ class LogItemWidget extends StatelessWidget {
   final LogModel log;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
+  final VoidCallback onTap;
 
   const LogItemWidget({
     super.key,
     required this.log,
     required this.onEdit,
     required this.onDelete,
+    required this.onTap, 
   });
 
   Color _getCategoryColor() {
@@ -32,7 +34,6 @@ class LogItemWidget extends StatelessWidget {
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: _getCategoryColor(), 
         borderRadius: BorderRadius.circular(15),
@@ -44,55 +45,79 @@ class LogItemWidget extends StatelessWidget {
           ),
         ],
       ),
-      child: Stack( 
-        children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+      child: InkWell(
+        onTap: onTap, 
+        borderRadius: BorderRadius.circular(15),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Stack( 
             children: [
-              Text(
-                log.timestamp,
-                style: const TextStyle(fontSize: 12, color: Colors.grey),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  //Label Kategori
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.6), 
+                      borderRadius: BorderRadius.circular(5),
+                    ),
+                    child: Text(
+                      log.category, 
+                      style: TextStyle(
+                        fontSize: 10, 
+                        fontWeight: FontWeight.bold, 
+                        color: primaryColor,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    log.timestamp,
+                    style: const TextStyle(fontSize: 12, color: Colors.grey),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    log.title,
+                    style: const TextStyle(
+                      fontSize: 18, 
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    log.description,
+                    style: TextStyle(
+                      fontSize: 14, 
+                      color: Colors.black.withValues(alpha: 0.7), 
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(height: 12),
-              Text(
-                log.title,
-                style: const TextStyle(
-                  fontSize: 18, 
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black87,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                log.description,
-                style: TextStyle(
-                  fontSize: 14, 
-                  color: Colors.black.withValues(alpha: 0.7), 
+              Positioned(
+                right: 0,
+                top: 0,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _buildCircularButton(
+                      icon: Icons.edit_rounded,
+                      iconColor: primaryColor,
+                      onTap: onEdit,
+                    ),
+                    const SizedBox(width: 10),
+                    _buildCircularButton(
+                      icon: Icons.delete_rounded,
+                      iconColor: const Color.fromARGB(255, 239, 83, 80), 
+                      onTap: onDelete,
+                    ),
+                  ],
                 ),
               ),
             ],
           ),
-          Positioned(
-            right: 0,
-            top: 0,
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                _buildCircularButton(
-                  icon: Icons.edit_rounded,
-                  iconColor: primaryColor,
-                  onTap: onEdit,
-                ),
-                const SizedBox(width: 10),
-                _buildCircularButton(
-                  icon: Icons.delete_rounded,
-                  iconColor: const Color.fromARGB(255, 239, 83, 80), 
-                  onTap: onDelete,
-                ),
-              ],
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -103,7 +128,7 @@ class LogItemWidget extends StatelessWidget {
     required VoidCallback onTap,
   }) {
     return GestureDetector(
-      onTap: onTap,
+      onTap: onTap, 
       child: Container(
         padding: const EdgeInsets.all(6),
         decoration: BoxDecoration(
