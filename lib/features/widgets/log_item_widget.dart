@@ -12,19 +12,19 @@ class LogItemWidget extends StatelessWidget {
     required this.log,
     required this.onEdit,
     required this.onDelete,
-    required this.onTap, 
+    required this.onTap,
   });
 
   Color _getCategoryColor() {
     switch (log.category) {
       case "Urgent":
-        return const Color.fromARGB(255, 255, 240, 240); 
+        return const Color.fromARGB(255, 255, 240, 240);
       case "Pekerjaan":
-        return const Color.fromARGB(255, 232, 244, 253); 
+        return const Color.fromARGB(255, 232, 244, 253);
       case "Pribadi":
-        return const Color.fromARGB(255, 243, 229, 245); 
+        return const Color.fromARGB(255, 243, 229, 245);
       default:
-        return const Color.fromARGB(255, 255, 255, 255); 
+        return const Color.fromARGB(255, 255, 255, 255);
     }
   }
 
@@ -35,85 +35,72 @@ class LogItemWidget extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
-        color: _getCategoryColor(), 
+        color: _getCategoryColor(),
         borderRadius: BorderRadius.circular(15),
         boxShadow: [
           BoxShadow(
-            color: const Color.fromARGB(255, 0, 0, 0).withValues(alpha: 0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 5,
             offset: const Offset(0, 2),
           ),
         ],
       ),
       child: InkWell(
-        onTap: onTap, 
+        onTap: onTap,
         borderRadius: BorderRadius.circular(15),
         child: Padding(
           padding: const EdgeInsets.all(16),
-          child: Stack( 
+          child: Row( // Gunakan Row utama agar layout tidak hancur saat swipe
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  //Label Kategori
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.6), 
-                      borderRadius: BorderRadius.circular(5),
-                    ),
-                    child: Text(
-                      log.category, 
-                      style: TextStyle(
-                        fontSize: 10, 
-                        fontWeight: FontWeight.bold, 
-                        color: primaryColor,
+              // Bagian Teks (Kiri)
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.6),
+                        borderRadius: BorderRadius.circular(5),
+                      ),
+                      child: Text(
+                        log.category,
+                        style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: primaryColor),
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    log.timestamp,
-                    style: const TextStyle(fontSize: 12, color: Colors.grey),
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    log.title,
-                    style: const TextStyle(
-                      fontSize: 18, 
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black87,
+                    const SizedBox(height: 8),
+                    Text(
+                      log.timestamp,
+                      style: const TextStyle(fontSize: 12, color: Colors.grey),
                     ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    log.description,
-                    style: TextStyle(
-                      fontSize: 14, 
-                      color: Colors.black.withValues(alpha: 0.7), 
+                    const SizedBox(height: 8),
+                    Text(
+                      log.title,
+                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black87),
                     ),
-                  ),
-                ],
-              ),
-              Positioned(
-                right: 0,
-                top: 0,
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    _buildCircularButton(
-                      icon: Icons.edit_rounded,
-                      iconColor: primaryColor,
-                      onTap: onEdit,
-                    ),
-                    const SizedBox(width: 10),
-                    _buildCircularButton(
-                      icon: Icons.delete_rounded,
-                      iconColor: const Color.fromARGB(255, 239, 83, 80), 
-                      onTap: onDelete,
+                    const SizedBox(height: 4),
+                    Text(
+                      log.description,
+                      style: TextStyle(fontSize: 14, color: Colors.black.withValues(alpha: 0.7)),
                     ),
                   ],
                 ),
+              ),
+              Column(
+                children: [
+                  _buildCircularButton(
+                    icon: Icons.edit_rounded,
+                    iconColor: primaryColor,
+                    onTap: onEdit,
+                  ),
+                  const SizedBox(height: 10),
+                  _buildCircularButton(
+                    icon: Icons.delete_rounded,
+                    iconColor: Colors.redAccent,
+                    onTap: onDelete,
+                  ),
+                ],
               ),
             ],
           ),
@@ -128,11 +115,11 @@ class LogItemWidget extends StatelessWidget {
     required VoidCallback onTap,
   }) {
     return GestureDetector(
-      onTap: onTap, 
+      onTap: onTap,
       child: Container(
         padding: const EdgeInsets.all(6),
-        decoration: BoxDecoration(
-          color: const Color.fromARGB(255, 255, 255, 255).withValues(alpha: 0.6), 
+        decoration: const BoxDecoration(
+          color: Colors.white,
           shape: BoxShape.circle,
         ),
         child: Icon(icon, color: iconColor, size: 20),

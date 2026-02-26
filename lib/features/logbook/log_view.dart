@@ -257,12 +257,12 @@ class _LogViewState extends State<LogView> {
     Navigator.pop(context);
   }
 
-  void _confirmAction({
+  Future<void> _confirmAction({
     required String title,
     required String content,
     required VoidCallback onConfirm,
-  }) {
-    showDialog(
+  }) async {
+    await showDialog(
       context: context,
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
@@ -346,7 +346,6 @@ class _LogViewState extends State<LogView> {
                   ),
                 ),
                 const SizedBox(width: 10),
-                // --- DROPDOWN FILTER KATEGORI ---
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10),
                   decoration: BoxDecoration(
@@ -389,10 +388,9 @@ class _LogViewState extends State<LogView> {
               valueListenable: _controller.filteredLogs,
               builder: (context, currentLogs, _) {
                 final String currentSearch = _controller.searchQuery.value;
-                final String currentFilter = _controller.selectedFilter.value; // Ambil nilai filter saat ini
+                final String currentFilter = _controller.selectedFilter.value;
 
                 if (currentLogs.isEmpty) {
-                  // Cek apakah list kosong karena pencarian ATAU karena filter
                   final bool isSearchingOrFiltering = currentSearch.isNotEmpty || currentFilter != "Semua";
                   
                   return Column(
@@ -431,9 +429,7 @@ class _LogViewState extends State<LogView> {
                             ),
                             const SizedBox(height: 32),
                             Text(
-                              isSearchingOrFiltering
-                                  ? "Tidak Ditemukan"
-                                  : "Logbook Masih Kosong",
+                              isSearchingOrFiltering ? "Tidak Ditemukan" : "Logbook Masih Kosong",
                               style: TextStyle(
                                 fontSize: 22,
                                 fontWeight: FontWeight.bold,
@@ -442,18 +438,13 @@ class _LogViewState extends State<LogView> {
                             ),
                             const SizedBox(height: 12),
                             Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 40,
-                              ),
+                              padding: const EdgeInsets.symmetric(horizontal: 40),
                               child: Text(
                                 isSearchingOrFiltering
                                     ? "Catatan dengan kriteria tersebut tidak ditemukan."
                                     : "Ketuk tombol + untuk mulai mencatat hari ini.",
                                 textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  color: Colors.grey[600],
-                                  fontSize: 15,
-                                ),
+                                style: TextStyle(color: Colors.grey[600], fontSize: 15),
                               ),
                             ),
                           ],
@@ -469,18 +460,47 @@ class _LogViewState extends State<LogView> {
                   itemCount: currentLogs.length,
                   itemBuilder: (context, index) {
                     final log = currentLogs[index];
-                    return LogItemWidget(
-                      log: log,
-                      onTap: () => _showReadLogDialog(log),
-                      onEdit: () => _openLogDialog(index: index, log: log),
-                      onDelete: () => _confirmAction(
-                        title: "Konfirmasi Hapus",
-                        content: "Hapus catatan ini?",
-                        onConfirm: () {
-                          _controller.removeLog(index);
-                          Navigator.pop(context);
-                          _showSnackBar("Catatan telah dihapus.");
-                        },
+                    
+                    // TAMBAHAN: DISMISSIBLE UNTUK SWIPE DELETE
+                    return Dismissible(
+                      key: Key(log.timestamp + log.title), 
+                      direction: DismissDirection.endToStart,
+                      confirmDismiss: (direction) async {
+                        bool delete = false;
+                        await _confirmAction(
+                          title: "Konfirmasi Hapus",
+                          content: "Hapus catatan ini?",
+                          onConfirm: () {
+                            delete = true;
+                            Navigator.pop(context);
+                          },
+                        );
+                        return delete;
+                      },
+                      onDismissed: (direction) {
+                        _controller.removeLog(index);
+                        _showSnackBar("Catatan telah dihapus.");
+                      },
+                      background: Container(
+                        alignment: Alignment.centerRight,
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        margin: const EdgeInsets.symmetric(vertical: 8),
+                        color: Colors.redAccent,
+                        child: const Icon(Icons.delete_forever, color: Colors.white, size: 30),
+                      ),
+                      child: LogItemWidget(
+                        log: log,
+                        onTap: () => _showReadLogDialog(log),
+                        onEdit: () => _openLogDialog(index: index, log: log),
+                        onDelete: () => _confirmAction(
+                          title: "Konfirmasi Hapus",
+                          content: "Hapus catatan ini?",
+                          onConfirm: () {
+                            _controller.removeLog(index);
+                            Navigator.pop(context);
+                            _showSnackBar("Catatan telah dihapus.");
+                          },
+                        ),
                       ),
                     );
                   },
