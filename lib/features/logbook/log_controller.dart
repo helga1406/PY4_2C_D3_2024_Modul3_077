@@ -40,6 +40,13 @@ class LogController {
   }
 
   void addLog(String title, String desc, String category) {
+    if (title.trim().isEmpty) {
+      return; 
+    }
+
+    if (desc.trim().isEmpty) {
+      return; 
+    }
     final String formattedTime = DateTime.now().toString().substring(0, 16);
     final newLog = LogModel(
       title: title, 
