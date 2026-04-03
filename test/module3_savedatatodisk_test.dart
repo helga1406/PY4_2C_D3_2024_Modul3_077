@@ -16,7 +16,6 @@ void main() {
       // Buat objek LogController dengan username dummy
       controller = LogController(username: "helga");
       
-      // Tunggu sebentar agar loadFromDisk() di konstruktor selesai
       await Future.delayed(const Duration(milliseconds: 100));
     });
 
@@ -38,7 +37,7 @@ void main() {
       controller.addLog("", "Deskripsi log tanpa judul", "Umum");
 
       actual = controller.logsNotifier.value.length;
-      expected = 0; // Ekspektasinya log tidak bertambah (tetap 0) karena title kosong
+      expected = 0;
 
       // (3) verify (assert, check)
       expect(actual, expected, reason: 'Expected $expected but got $actual');
@@ -50,7 +49,7 @@ void main() {
       controller.addLog("Judul Saja", "", "Umum");
 
       actual = controller.logsNotifier.value.length;
-      expected = 0; // Ekspektasinya log tidak bertambah (tetap 0) karena desc kosong
+      expected = 0; 
 
       // (3) verify (assert, check)
       expect(actual, expected, reason: 'Expected $expected but got $actual');
